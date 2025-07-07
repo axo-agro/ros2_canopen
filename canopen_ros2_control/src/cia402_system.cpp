@@ -57,9 +57,16 @@ void Cia402System::initDeviceContainer()
     info_.hardware_parameters["bus_config"], tmp_master_bin);
   auto drivers = device_container_->get_registered_drivers();
   RCLCPP_INFO(kLogger, "Number of registered drivers: '%lu'", device_container_->count_drivers());
+
   for (auto it = drivers.begin(); it != drivers.end(); it++)
   {
-    auto driver = std::static_pointer_cast<ros2_canopen::Cia402Driver>(it->second);
+    auto driver = std::dynamic_pointer_cast<ros2_canopen::Cia402Driver>(it->second);
+    if (!driver) {
+      RCLCPP_INFO(
+        kLogger, "\nUnregistered invalid driver:\n    name: '%s'\n    node_id: '0x%X'",
+        it->second->get_node_base_interface()->get_name(), it->first);
+      continue;
+    }
 
     auto nmt_state_cb = [&](canopen::NmtState nmt_state, uint8_t id)
     { canopen_data_[id].nmt_state.set_state(nmt_state); };
@@ -311,6 +318,7 @@ hardware_interface::return_type Cia402System::write(
       case MotorBase::Interpolated_Position:
         motion_controller_driver->set_target(motor_data_[it->first].target.position_value);
         break;
+      case MotorBase::Velocity:
       case MotorBase::Profiled_Velocity:
       case MotorBase::Cyclic_Synchronous_Velocity:
         motion_controller_driver->set_target(motor_data_[it->first].target.velocity_value);
@@ -343,7 +351,7 @@ void Cia402System::switchModes(uint id, const std::shared_ptr<ros2_canopen::Cia4
   if (motor_data_[id].velocity_mode.is_commanded())
   {
     motor_data_[id].velocity_mode.set_response(
-      driver->set_operation_mode(MotorBase::Profiled_Velocity));
+      driver->set_operation_mode(MotorBase::Velocity));
   }
 
   if (motor_data_[id].cyclic_velocity_mode.is_commanded())

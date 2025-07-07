@@ -455,7 +455,7 @@ void NodeCanopen402Driver<NODETYPE>::handle_set_mode_velocity(
   const std_srvs::srv::Trigger::Request::SharedPtr request,
   std_srvs::srv::Trigger::Response::SharedPtr response)
 {
-  response->success = set_operation_mode(MotorBase::Profiled_Velocity);
+  response->success = set_operation_mode(MotorBase::Velocity);
 }
 
 template <class NODETYPE>

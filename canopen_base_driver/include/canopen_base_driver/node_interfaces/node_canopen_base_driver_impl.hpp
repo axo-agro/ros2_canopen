@@ -261,7 +261,7 @@ void NodeCanopenBaseDriver<NODETYPE>::add_to_master()
     });
 
   auto future_status = f.wait_for(this->non_transmit_timeout_);
-  if (future_status != std::future_status::ready)
+  if (future_status != std::future_status::read)
   {
     RCLCPP_ERROR(this->node_->get_logger(), "Adding timed out.");
     throw DriverException("add_to_master: adding timed out");
